@@ -43,10 +43,20 @@ public class Main {
         int numPoints = Integer.parseInt(databaseParams[0]);
         int dimensions = Integer.parseInt(databaseParams[1]);
         System.out.println("Loading " + numPoints + " points with " + dimensions + " dimensions...");
-        double[][] data = new double [numPoints][dimensions];
-        while(scan.hasNextLine()) {
 
+        // Read in file
+        double[][] data = new double [numPoints][dimensions];
+        int i = 0;
+        while(scan.hasNextLine()) {
+            int j = 0;
+            for(String number : scan.nextLine().split(" ")) {
+                data[i][j] = Double.parseDouble(number);
+                j++;
+            }
+            i++;
         }
+
+        System.out.println("Test");
     }
 
     /**
