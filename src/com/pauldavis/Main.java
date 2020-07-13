@@ -15,12 +15,10 @@ import static java.lang.System.exit;
  */
 public class Main {
 
-    // Input file name
-    String inputFileName;
-
     // K-Means Parameters
-    int numClusters, maxIterations, numRuns;
-    double convergenceThreshold;
+    private static int numClusters, maxIterations, numRuns;
+    private static double convergenceThreshold;
+    private static ClusteredDatabase clusteredDatabase;
 
     /**
      * Main input, checks for given correct parameters:
@@ -56,7 +54,33 @@ public class Main {
             i++;
         }
 
-        System.out.println("Test");
+        numClusters = Integer.parseInt(args[1]);
+        maxIterations = Integer.parseInt(args[2]);
+        convergenceThreshold = Double.parseDouble(args[3]);
+        numRuns = Integer.parseInt(args[4]);
+
+        for(int z = 0; z < numRuns; z++) {
+            System.out.println("Run: " + (z + 1));
+            System.out.println("-------------------------------------------");
+            clusteredDatabase = new ClusteredDatabase(data, numClusters);
+            double lastSSE = clusteredDatabase.calculateSumSquaredError();
+            System.out.println("Iteration 1: SSE = " + lastSSE);
+
+            int iteration = 2;
+            while (iteration <= maxIterations) {
+                clusteredDatabase.balanceCentroids();
+                clusteredDatabase.rebuildClusters();
+                double currentSSE = clusteredDatabase.calculateSumSquaredError();
+                System.out.println("Iteration " + iteration + ": SSE = " + currentSSE);
+                iteration += 1;
+                if(((lastSSE - currentSSE) / lastSSE) < convergenceThreshold) {
+                    System.out.println();
+                    break;
+                }
+                else
+                    lastSSE = currentSSE;
+            }
+        }
     }
 
     /**
