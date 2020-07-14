@@ -2,7 +2,6 @@ package com.pauldavis;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.Scanner;
 
 import static java.lang.System.exit;
@@ -38,6 +37,8 @@ public class Main {
         File inputFile = new File(args[0]);
         Scanner scan = new Scanner(inputFile);
         String[] databaseParams = scan.nextLine().split(" ");
+
+        // First two lines define size and dimensions
         int numPoints = Integer.parseInt(databaseParams[0]);
         int dimensions = Integer.parseInt(databaseParams[1]);
         System.out.println("Loading " + numPoints + " points with " + dimensions + " dimensions...");
@@ -54,33 +55,57 @@ public class Main {
             i++;
         }
 
+        // Read the rest of the input arguments
         numClusters = Integer.parseInt(args[1]);
         maxIterations = Integer.parseInt(args[2]);
         convergenceThreshold = Double.parseDouble(args[3]);
         numRuns = Integer.parseInt(args[4]);
 
+        // Used for tracking best run
+        double lowestSSE = Double.MAX_VALUE;
+        int lowestRun = -1;
+
+        // Loop for number of runs
         for(int z = 0; z < numRuns; z++) {
+            // Output formatting
             System.out.println("Run: " + (z + 1));
             System.out.println("-------------------------------------------");
-            clusteredDatabase = new ClusteredDatabase(data, numClusters);
-            double lastSSE = clusteredDatabase.calculateSumSquaredError();
-            System.out.println("Iteration 1: SSE = " + lastSSE);
 
-            int iteration = 2;
+            // Create the database object
+            clusteredDatabase = new ClusteredDatabase(data, numClusters);
+            // Used to track when done
+            double lastSSE = Double.POSITIVE_INFINITY;
+
+            // Loop for given iterations
+            int iteration = 1;
             while (iteration <= maxIterations) {
+                // Move centroids and reassign points to clusters
                 clusteredDatabase.balanceCentroids();
                 clusteredDatabase.rebuildClusters();
+
+                // Get current SSE
                 double currentSSE = clusteredDatabase.calculateSumSquaredError();
                 System.out.println("Iteration " + iteration + ": SSE = " + currentSSE);
                 iteration += 1;
+
+                // Check if we should stop
                 if(((lastSSE - currentSSE) / lastSSE) < convergenceThreshold) {
                     System.out.println();
+                    // Find if this was best run
+                    if(currentSSE < lowestSSE) {
+                        lowestSSE = currentSSE;
+                        lowestRun = z + 1;
+                    }
+                    // Leave iteration
                     break;
                 }
-                else
+                else // Done, update SSE for next round
                     lastSSE = currentSSE;
             }
         }
+
+        // Print best run
+        System.out.println("Best Run: " + lowestRun + " with SSE: " + lowestSSE);
     }
 
     /**

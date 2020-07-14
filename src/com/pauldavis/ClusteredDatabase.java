@@ -1,11 +1,12 @@
 package com.pauldavis;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-
+/**
+ * Data Structure to hold a group of clusters and points
+ */
 public class ClusteredDatabase {
 
     // List of clusters
@@ -17,9 +18,12 @@ public class ClusteredDatabase {
      * @param clusterCount How many clusters to create
      */
     public ClusteredDatabase(double[][] rawData, int clusterCount) {
+        // Initialize
         clusters = new ArrayList<>();
         List<Integer> randomIndices = new ArrayList<>();
         Random rand = new Random();
+
+        // Generate random points, making sure no duplicates
         for(int i = 0; i < clusterCount; i ++) {
             int test = rand.nextInt(rawData.length);
             while(randomIndices.contains(test))
@@ -34,18 +38,27 @@ public class ClusteredDatabase {
         
         // Assign to clusters
         for(int i = 0; i < rawData.length; i++) {
+            // Don't want to check centroids, better logic after all made just check these for now
             if(randomIndices.contains(i))
                 continue;
-            
+
+            // Values to track best cluster
             double closestClusterDist = Double.MAX_VALUE;
             Cluster closestCluster = null;
+
+            // Loop Clusters
             for(Cluster cluster : clusters) {
+                // Test distance to this cluster
                 double tempDistance = cluster.distanceFromCentroid(rawData[i]);
+
+                // If better than anything seen, this is best option
                 if(tempDistance < closestClusterDist) {
                     closestClusterDist = tempDistance;
                     closestCluster = cluster;
                 }
             }
+
+            // Assign point to what was found to be closest
             closestCluster.addChild(rawData[i]);
         }
     }
@@ -54,6 +67,7 @@ public class ClusteredDatabase {
      * Rebuilds clusters
      */
     public void rebuildClusters() {
+        // List to hold all non centroids points, dumped from clusters
         List<double[]> data = new ArrayList<>();
         // Grab non centroids and clear
         for(Cluster cluster : clusters) {
@@ -63,15 +77,24 @@ public class ClusteredDatabase {
 
         // Assign to closest cluster
         for (double[] datum : data) {
+
+            // Tracking for closest cluster
             double closestClusterDist = Double.MAX_VALUE;
             Cluster closestCluster = null;
+
+            // Loop clusters
             for (Cluster cluster : clusters) {
+                // Test for distance
                 double tempDistance = cluster.distanceFromCentroid(datum);
+
+                // If this is closer, remember
                 if (tempDistance < closestClusterDist) {
                     closestClusterDist = tempDistance;
                     closestCluster = cluster;
                 }
             }
+
+            // Add to what was found to be closest
             closestCluster.addChild(datum);
         }
     }
@@ -114,6 +137,7 @@ public class ClusteredDatabase {
          * Balances centroid to middle of cluster
          */
         public void recalculateCentroid() {
+            // Throw centroid into all points, will be reassigned later
             children.add(centroid);
 
             // Find middle of cluster
@@ -126,8 +150,10 @@ public class ClusteredDatabase {
                 meanValues[i] = sum / children.size();
             }
 
+            // We assign values to perfect center, then find closest points to this "false" centroid
             centroid = meanValues;
-            // Find closest point
+
+            // Find closest point to perfect center
             double closestDist = Double.MAX_VALUE;
             int closestIndex = 0;
             for(int i = 0; i < children.size(); i ++) {
@@ -137,6 +163,8 @@ public class ClusteredDatabase {
                     closestIndex = i;
                 }
             }
+
+            // Set the centroid and remove from children, since its centroid now
             centroid = children.get(closestIndex);
             children.remove(closestIndex);
         }
