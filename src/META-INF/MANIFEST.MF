@@ -1,3 +1,4 @@
 Manifest-Version: 1.0
 Main-Class: com.pauldavis.Main
+Class-Path: com.pauldavis.Main
 

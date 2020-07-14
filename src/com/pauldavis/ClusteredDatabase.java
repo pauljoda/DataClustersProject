@@ -119,12 +119,14 @@ public class ClusteredDatabase {
         return error;
     }
 
-    /**
-     * Data structure for clusters
-     */
+    /*******************************************************************************************************************
+     * Data structure for clusters                                                                                     *
+     *******************************************************************************************************************/
     private static class Cluster {
+
         double[] centroid;
         List<double[]> children;
+
         /**
          * Creates a cluster with given initial cluster
          * @param initialPoint First centroid
@@ -132,15 +134,13 @@ public class ClusteredDatabase {
         public Cluster(double[] initialPoint) {
             centroid = initialPoint;
             children = new ArrayList<>();
+            children.add(initialPoint);
         }
 
         /**
          * Balances centroid to middle of cluster
          */
         public void recalculateCentroid() {
-            // Throw centroid into all points, will be reassigned later
-            children.add(centroid);
-
             // Find middle of cluster
             double[] meanValues = new double[centroid.length];
             for(double[] point : children)
@@ -153,21 +153,6 @@ public class ClusteredDatabase {
 
             // We assign values to perfect center, then find closest points to this "false" centroid
             centroid = meanValues;
-
-            // Find closest point to perfect center
-            double closestDist = Double.MAX_VALUE;
-            int closestIndex = 0;
-            for(int i = 0; i < children.size(); i ++) {
-                double tempDist = errorFromCentroid(children.get(i));
-                if(tempDist < closestDist) {
-                    closestDist = tempDist;
-                    closestIndex = i;
-                }
-            }
-
-            // Set the centroid and remove from children, since its centroid now
-            centroid = children.get(closestIndex);
-            children.remove(closestIndex);
         }
 
         /**
