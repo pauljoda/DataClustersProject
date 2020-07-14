@@ -14,11 +14,6 @@ import static java.lang.System.exit;
  */
 public class Main {
 
-    // K-Means Parameters
-    private static int numClusters, maxIterations, numRuns;
-    private static double convergenceThreshold;
-    private static ClusteredDatabase clusteredDatabase;
-
     /**
      * Main input, checks for given correct parameters:
      *  String  - F: name of the data file
@@ -26,7 +21,7 @@ public class Main {
      *  int     - I: maximum number of iterations, positive
      *  int     - T: convergence threshold, non-negative
      *  int     - R: number of runs, positive
-     * @param args
+     * @param args Input
      */
     public static void main(String[] args) throws FileNotFoundException {
         // Check args
@@ -56,10 +51,11 @@ public class Main {
         }
 
         // Read the rest of the input arguments
-        numClusters = Integer.parseInt(args[1]);
-        maxIterations = Integer.parseInt(args[2]);
-        convergenceThreshold = Double.parseDouble(args[3]);
-        numRuns = Integer.parseInt(args[4]);
+        // K-Means Parameters
+        int numClusters = Integer.parseInt(args[1]);
+        int maxIterations = Integer.parseInt(args[2]);
+        double convergenceThreshold = Double.parseDouble(args[3]);
+        int numRuns = Integer.parseInt(args[4]);
 
         // Used for tracking best run
         double lowestSSE = Double.MAX_VALUE;
@@ -72,7 +68,7 @@ public class Main {
             System.out.println("-------------------------------------------");
 
             // Create the database object
-            clusteredDatabase = new ClusteredDatabase(data, numClusters);
+            ClusteredDatabase clusteredDatabase = new ClusteredDatabase(data, numClusters);
             // Used to track when done
             double lastSSE = Double.POSITIVE_INFINITY;
 
@@ -89,7 +85,7 @@ public class Main {
                 iteration += 1;
 
                 // Check if we should stop
-                if(((lastSSE - currentSSE) / lastSSE) < convergenceThreshold) {
+                if(((lastSSE - currentSSE) / lastSSE) < convergenceThreshold || iteration == maxIterations - 1) {
                     System.out.println();
                     // Find if this was best run
                     if(currentSSE < lowestSSE) {

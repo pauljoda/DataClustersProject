@@ -13,7 +13,7 @@ public class ClusteredDatabase {
     List<Cluster> clusters;
 
     /**
-     * Generate a clusted database, will create random initial points
+     * Generate a cluster database, will create random initial points
      * @param rawData Raw input
      * @param clusterCount How many clusters to create
      */
@@ -49,7 +49,7 @@ public class ClusteredDatabase {
             // Loop Clusters
             for(Cluster cluster : clusters) {
                 // Test distance to this cluster
-                double tempDistance = cluster.distanceFromCentroid(rawData[i]);
+                double tempDistance = cluster.errorFromCentroid(rawData[i]);
 
                 // If better than anything seen, this is best option
                 if(tempDistance < closestClusterDist) {
@@ -69,6 +69,7 @@ public class ClusteredDatabase {
     public void rebuildClusters() {
         // List to hold all non centroids points, dumped from clusters
         List<double[]> data = new ArrayList<>();
+
         // Grab non centroids and clear
         for(Cluster cluster : clusters) {
             data.addAll(cluster.children);
@@ -85,7 +86,7 @@ public class ClusteredDatabase {
             // Loop clusters
             for (Cluster cluster : clusters) {
                 // Test for distance
-                double tempDistance = cluster.distanceFromCentroid(datum);
+                double tempDistance = cluster.errorFromCentroid(datum);
 
                 // If this is closer, remember
                 if (tempDistance < closestClusterDist) {
@@ -157,7 +158,7 @@ public class ClusteredDatabase {
             double closestDist = Double.MAX_VALUE;
             int closestIndex = 0;
             for(int i = 0; i < children.size(); i ++) {
-                double tempDist = distanceFromCentroid(children.get(i));
+                double tempDist = errorFromCentroid(children.get(i));
                 if(tempDist < closestDist) {
                     closestDist = tempDist;
                     closestIndex = i;
@@ -199,11 +200,10 @@ public class ClusteredDatabase {
          * @param point Input point
          * @return Squared distance between points
          */
-        public double distanceFromCentroid(double[] point) {
+        public double errorFromCentroid(double[] point) {
             double distance = 0;
-            for(int i = 0; i < point.length; i ++) {
+            for(int i = 0; i < point.length; i ++)
                 distance += calculateSingleError(centroid[i], point[i]);
-            }
             return distance;
         }
 
@@ -213,11 +213,8 @@ public class ClusteredDatabase {
          */
         public double calculateSquaredError() {
             double error = 0;
-            for(double[] point : children) {
-                for(int i = 0; i < point.length; i ++) {
-                    error += calculateSingleError(centroid[i], point[i]);
-                }
-            }
+            for(double[] point : children)
+                error += errorFromCentroid(point);
             return error;
         }
     }
