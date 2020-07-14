@@ -123,7 +123,7 @@ public class ClusteredDatabase {
                     meanValues[i] += point[i];
             for(int i = 0; i < meanValues.length; i ++) {
                 double sum = meanValues[i];
-                meanValues[i] = sum / meanValues.length;
+                meanValues[i] = sum / children.size();
             }
 
             centroid = meanValues;
