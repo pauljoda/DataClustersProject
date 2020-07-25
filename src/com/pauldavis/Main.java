@@ -50,6 +50,43 @@ public class Main {
             i++;
         }
 
+        // Normalize Data
+        // Array to hold min and max, first is which attribute, second is min at 0 max at 1
+        double[][] attributeMinMax = new double[dimensions][2];
+
+        // Set min and max to highest/lowest values for easier comparison
+        for(int att = 0 ; att < dimensions; att++) {
+            attributeMinMax[att][0] = Double.MAX_VALUE;
+            attributeMinMax[att][1] = Double.MIN_VALUE;
+        }
+
+        // Find min and max
+        for(int entry = 0; entry < numPoints; entry++) {
+            for(int attribute = 0; attribute < dimensions; attribute++) {
+                // Current Value checking
+                double attributeValue = data[entry][attribute];
+
+                // Min
+                if(attributeValue < attributeMinMax[attribute][0])
+                    attributeMinMax[attribute][0] = attributeValue;
+
+                // Max
+                if(attributeValue > attributeMinMax[attribute][1])
+                    attributeMinMax[attribute][1] = attributeValue;
+            }
+        }
+
+        // Apply Normalization
+        for(int entry = 0; entry < numPoints; entry++) {
+            for(int attribute = 0; attribute < dimensions; attribute++) {
+                // Normalize
+                data[entry][attribute] =
+                        ((data[entry][attribute] - attributeMinMax[attribute][0]) /
+                                (attributeMinMax[attribute][1] - attributeMinMax[attribute][0] == 0 ? 1 : // Catch divide by zero
+                                        attributeMinMax[attribute][1] - attributeMinMax[attribute][0]));
+            }
+        }
+
         // Read the rest of the input arguments
         // K-Means Parameters
         int numClusters = Integer.parseInt(args[1]);
