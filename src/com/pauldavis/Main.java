@@ -1,7 +1,11 @@
 package com.pauldavis;
 
+import com.pauldavis.data.Results;
+import com.pauldavis.data.database.RandomCentroidClusteredDatabase;
+
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.HashMap;
 import java.util.Scanner;
 
 import static java.lang.System.exit;
@@ -94,9 +98,22 @@ public class Main {
         double convergenceThreshold = Double.parseDouble(args[3]);
         int numRuns = Integer.parseInt(args[4]);
 
-        // Used for tracking best run
-        double lowestSSE = Double.MAX_VALUE;
-        int lowestRun = -1;
+
+        /***************************************************************************************************************
+         * Random Centroids                                                                                            *
+         ***************************************************************************************************************/
+
+        System.out.println("K-Means with random Centroids:");
+
+        // Setup Results
+        String random_centers = "RANDOM_CENTERS";
+        Results.getResults().put(random_centers, new HashMap<>());
+        Results.getResults().get(random_centers).put(Results.BEST_INITIAL_SSE_RUN, -1.0);
+        Results.getResults().get(random_centers).put(Results.BEST_INITIAL_SSE, Double.MAX_VALUE);
+        Results.getResults().get(random_centers).put(Results.BEST_ENDING_SSE_RUN, -1.0);
+        Results.getResults().get(random_centers).put(Results.BEST_ENDING_SSE, Double.MAX_VALUE);
+        Results.getResults().get(random_centers).put(Results.BEST_RUN_RUN, -1.0);
+        Results.getResults().get(random_centers).put(Results.BEST_RUN_COUNT, Double.MAX_VALUE);
 
         // Loop for number of runs
         for(int z = 0; z < numRuns; z++) {
@@ -105,7 +122,12 @@ public class Main {
             System.out.println("-------------------------------------------");
 
             // Create the database object
-            ClusteredDatabase clusteredDatabase = new ClusteredDatabase(data, numClusters);
+            RandomCentroidClusteredDatabase randomCentroidClusteredDatabase = new RandomCentroidClusteredDatabase(data, numClusters);
+            double initialSSE = randomCentroidClusteredDatabase.getInitialSSE();
+            if(initialSSE < Results.getResults().get(random_centers).get(Results.BEST_INITIAL_SSE)) {
+                Results.getResults().get(random_centers).put(Results.BEST_INITIAL_SSE, initialSSE);
+                Results.getResults().get(random_centers).put(Results.BEST_INITIAL_SSE_RUN, (z + 1.0));
+            }
             // Used to track when done
             double lastSSE = Double.POSITIVE_INFINITY;
 
@@ -113,11 +135,11 @@ public class Main {
             int iteration = 1;
             while (iteration <= maxIterations) {
                 // Move centroids and reassign points to clusters
-                clusteredDatabase.balanceCentroids();
-                clusteredDatabase.rebuildClusters();
+                randomCentroidClusteredDatabase.balanceCentroids();
+                randomCentroidClusteredDatabase.rebuildClusters();
 
                 // Get current SSE
-                double currentSSE = clusteredDatabase.calculateSumSquaredError();
+                double currentSSE = randomCentroidClusteredDatabase.calculateSumSquaredError();
                 System.out.println("Iteration " + iteration + ": SSE = " + currentSSE);
                 iteration += 1;
 
@@ -125,10 +147,17 @@ public class Main {
                 if(((lastSSE - currentSSE) / lastSSE) < convergenceThreshold || iteration == maxIterations - 1) {
                     System.out.println();
                     // Find if this was best run
-                    if(currentSSE < lowestSSE) {
-                        lowestSSE = currentSSE;
-                        lowestRun = z + 1;
+                    if(currentSSE < Results.getResults().get(random_centers).get(Results.BEST_ENDING_SSE)) {
+                        Results.getResults().get(random_centers).put(Results.BEST_ENDING_SSE, currentSSE);
+                        Results.getResults().get(random_centers).put(Results.BEST_ENDING_SSE_RUN, (z + 1.0));
                     }
+
+                    // Check if shortest Run
+                    if(iteration < Results.getResults().get(random_centers).get(Results.BEST_RUN_COUNT)) {
+                        Results.getResults().get(random_centers).put(Results.BEST_RUN_COUNT, (double) iteration);
+                        Results.getResults().get(random_centers).put(Results.BEST_RUN_RUN, (z + 1.0));
+                    }
+
                     // Leave iteration
                     break;
                 }
@@ -137,8 +166,13 @@ public class Main {
             }
         }
 
-        // Print best run
-        System.out.println("Best Run: " + lowestRun + " with SSE: " + lowestSSE);
+        // Print best runs
+        System.out.println("Best Initial SSE: " + Results.getResults().get(random_centers).get(Results.BEST_INITIAL_SSE) +
+                " on run: " + Results.getResults().get(random_centers).get(Results.BEST_INITIAL_SSE_RUN));
+        System.out.println("Best Ending SSE: " + Results.getResults().get(random_centers).get(Results.BEST_ENDING_SSE) +
+                " on run: " + Results.getResults().get(random_centers).get(Results.BEST_ENDING_SSE_RUN));
+        System.out.println("Lowest iteration count: " + Results.getResults().get(random_centers).get(Results.BEST_RUN_COUNT) +
+                " on run: " + Results.getResults().get(random_centers).get(Results.BEST_RUN_RUN));
     }
 
     /**
