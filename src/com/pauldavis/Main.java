@@ -2,6 +2,7 @@ package com.pauldavis;
 
 import com.pauldavis.data.Results;
 import com.pauldavis.data.database.RandomCentroidClusteredDatabase;
+import com.pauldavis.data.database.RandomPartitionClusteredDatabase;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -40,7 +41,7 @@ public class Main {
         // First two lines define size and dimensions
         int numPoints = Integer.parseInt(databaseParams[0]);
         int dimensions = Integer.parseInt(databaseParams[1]);
-        System.out.println("Loading " + numPoints + " points with " + dimensions + " dimensions...");
+        System.out.println("Loading " + numPoints + " points with " + dimensions + " dimensions...\n\n");
 
         // Read in file
         double[][] data = new double [numPoints][dimensions];
@@ -166,13 +167,96 @@ public class Main {
             }
         }
 
-        // Print best runs
+
+        /***************************************************************************************************************
+         * Random Partitions                                                                                           *
+         ***************************************************************************************************************/
+
+        System.out.println("\n\nK-Means with random partitions:");
+
+        // Setup Results
+        String random_partitions = "RANDOM_PARTITIONS";
+        Results.getResults().put(random_partitions, new HashMap<>());
+        Results.getResults().get(random_partitions).put(Results.BEST_INITIAL_SSE_RUN, -1.0);
+        Results.getResults().get(random_partitions).put(Results.BEST_INITIAL_SSE, Double.MAX_VALUE);
+        Results.getResults().get(random_partitions).put(Results.BEST_ENDING_SSE_RUN, -1.0);
+        Results.getResults().get(random_partitions).put(Results.BEST_ENDING_SSE, Double.MAX_VALUE);
+        Results.getResults().get(random_partitions).put(Results.BEST_RUN_RUN, -1.0);
+        Results.getResults().get(random_partitions).put(Results.BEST_RUN_COUNT, Double.MAX_VALUE);
+
+        // Loop for number of runs
+        for(int z = 0; z < numRuns; z++) {
+            // Output formatting
+            System.out.println("Run: " + (z + 1));
+            System.out.println("-------------------------------------------");
+
+            // Create the database object
+            RandomPartitionClusteredDatabase randomPartitionClusteredDatabase = new RandomPartitionClusteredDatabase(data, numClusters);
+            double initialSSE = randomPartitionClusteredDatabase.getInitialSSE();
+            if(initialSSE < Results.getResults().get(random_partitions).get(Results.BEST_INITIAL_SSE)) {
+                Results.getResults().get(random_partitions).put(Results.BEST_INITIAL_SSE, initialSSE);
+                Results.getResults().get(random_partitions).put(Results.BEST_INITIAL_SSE_RUN, (z + 1.0));
+            }
+            // Used to track when done
+            double lastSSE = Double.POSITIVE_INFINITY;
+
+            // Loop for given iterations
+            int iteration = 1;
+            while (iteration <= maxIterations) {
+                // Move centroids and reassign points to clusters
+                randomPartitionClusteredDatabase.balanceCentroids();
+                randomPartitionClusteredDatabase.rebuildClusters();
+
+                // Get current SSE
+                double currentSSE = randomPartitionClusteredDatabase.calculateSumSquaredError();
+                System.out.println("Iteration " + iteration + ": SSE = " + currentSSE);
+                iteration += 1;
+
+                // Check if we should stop
+                if(((lastSSE - currentSSE) / lastSSE) < convergenceThreshold || iteration == maxIterations - 1) {
+                    System.out.println();
+                    // Find if this was best run
+                    if(currentSSE < Results.getResults().get(random_partitions).get(Results.BEST_ENDING_SSE)) {
+                        Results.getResults().get(random_partitions).put(Results.BEST_ENDING_SSE, currentSSE);
+                        Results.getResults().get(random_partitions).put(Results.BEST_ENDING_SSE_RUN, (z + 1.0));
+                    }
+
+                    // Check if shortest Run
+                    if(iteration < Results.getResults().get(random_partitions).get(Results.BEST_RUN_COUNT)) {
+                        Results.getResults().get(random_partitions).put(Results.BEST_RUN_COUNT, (double) iteration);
+                        Results.getResults().get(random_partitions).put(Results.BEST_RUN_RUN, (z + 1.0));
+                    }
+
+                    // Leave iteration
+                    break;
+                }
+                else // Done, update SSE for next round
+                    lastSSE = currentSSE;
+            }
+        }
+
+
+        /***************************************************************************************************************
+         * Results                                                                                                     *
+         ***************************************************************************************************************/
+
+        // Print best runs centroids
+        System.out.println("Random Centroid results:");
         System.out.println("Best Initial SSE: " + Results.getResults().get(random_centers).get(Results.BEST_INITIAL_SSE) +
                 " on run: " + Results.getResults().get(random_centers).get(Results.BEST_INITIAL_SSE_RUN));
         System.out.println("Best Ending SSE: " + Results.getResults().get(random_centers).get(Results.BEST_ENDING_SSE) +
                 " on run: " + Results.getResults().get(random_centers).get(Results.BEST_ENDING_SSE_RUN));
         System.out.println("Lowest iteration count: " + Results.getResults().get(random_centers).get(Results.BEST_RUN_COUNT) +
                 " on run: " + Results.getResults().get(random_centers).get(Results.BEST_RUN_RUN));
+
+        // Print best runs partitions
+        System.out.println("\nRandom Partition results:");
+        System.out.println("Best Initial SSE: " + Results.getResults().get(random_partitions).get(Results.BEST_INITIAL_SSE) +
+                " on run: " + Results.getResults().get(random_partitions).get(Results.BEST_INITIAL_SSE_RUN));
+        System.out.println("Best Ending SSE: " + Results.getResults().get(random_partitions).get(Results.BEST_ENDING_SSE) +
+                " on run: " + Results.getResults().get(random_partitions).get(Results.BEST_ENDING_SSE_RUN));
+        System.out.println("Lowest iteration count: " + Results.getResults().get(random_partitions).get(Results.BEST_RUN_COUNT) +
+                " on run: " + Results.getResults().get(random_partitions).get(Results.BEST_RUN_RUN));
     }
 
     /**
