@@ -57,12 +57,13 @@ public class Main {
 
         // Normalize Data
         // Array to hold min and max, first is which attribute, second is min at 0 max at 1
-        double[][] attributeMinMax = new double[dimensions][2];
+        double[] min = new double[dimensions];
+        double[] max = new double[dimensions];
 
         // Set min and max to highest/lowest values for easier comparison
         for(int att = 0 ; att < dimensions; att++) {
-            attributeMinMax[att][0] = Double.MAX_VALUE;
-            attributeMinMax[att][1] = Double.MIN_VALUE;
+            min[att] = Double.MAX_VALUE;
+            max[att] = Double.MIN_VALUE;
         }
 
         // Find min and max
@@ -72,23 +73,24 @@ public class Main {
                 double attributeValue = data[entry][attribute];
 
                 // Min
-                if(attributeValue < attributeMinMax[attribute][0])
-                    attributeMinMax[attribute][0] = attributeValue;
+                if(attributeValue < min[attribute])
+                    min[attribute] = attributeValue;
 
                 // Max
-                if(attributeValue > attributeMinMax[attribute][1])
-                    attributeMinMax[attribute][1] = attributeValue;
+                if(attributeValue > max[attribute])
+                    max[attribute] = attributeValue;
             }
         }
 
         // Apply Normalization
         for(int entry = 0; entry < numPoints; entry++) {
             for(int attribute = 0; attribute < dimensions; attribute++) {
+                double tempMin = min[attribute];
+                double tempMax = max[attribute];
                 // Normalize
                 data[entry][attribute] =
-                        ((data[entry][attribute] - attributeMinMax[attribute][0]) /
-                                (attributeMinMax[attribute][1] - attributeMinMax[attribute][0] == 0 ? 1 : // Catch divide by zero
-                                        attributeMinMax[attribute][1] - attributeMinMax[attribute][0]));
+                        ((data[entry][attribute] - tempMin) /
+                                (tempMax - tempMin == 0 ? 1 : tempMax - tempMin)); // Catch divide by zero
             }
         }
 
