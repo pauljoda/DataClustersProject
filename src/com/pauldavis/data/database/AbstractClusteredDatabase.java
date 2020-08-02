@@ -101,14 +101,61 @@ public abstract class AbstractClusteredDatabase {
     }
 
     /**
-     * Calculates the SumSquaredError (SSE)
+     * Calculates the SumSquaredError (SSE), within cluster distance
      * @return SSE
      */
-    public double calculateSumSquaredError() {
+    public double calculateSumSquaredErrorInternal() {
         double error = 0;
         for(Cluster cluster : clusters)
             error += cluster.calculateSquaredError();
         return error;
+    }
+
+    /**
+     * Calculates the SumSquaredError (SSE), outside cluster disance
+     * @return SSE
+     */
+    public double calculateSumSquaredErrorExternal() {
+        double error = 0;
+        for(Cluster cluster : clusters)
+            error += cluster.calculateSquaredErrorExternal(clusters);
+        return error;
+    }
+
+    /**
+     * Calculate the Silhouette Width average of all points
+     * @return Silhouette Width
+     */
+    public double calculateSilhouetteWidth() {
+        double silhouette = 0;
+
+        for(Cluster cluster : clusters)
+            silhouette += cluster.calculateSilhouette(getClosestCluster(cluster));
+        silhouette /= clusters.size();
+
+        return silhouette;
+    }
+
+    /**
+     * Find cluster closest to given
+     * @param cluster Cluster to find closest
+     * @return Closest cluster
+     */
+    public Cluster getClosestCluster(Cluster cluster) {
+        Cluster closest = new Cluster();
+        double distance = Double.MAX_VALUE;
+
+        for(Cluster localCluster : clusters) {
+            if(localCluster == cluster) continue;
+
+            double test = cluster.errorFromCentroid(localCluster.getCentroid());
+            if(test < distance) {
+                closest = localCluster;
+                distance = test;
+            }
+        }
+
+        return closest;
     }
 
     /*******************************************************************************************************************

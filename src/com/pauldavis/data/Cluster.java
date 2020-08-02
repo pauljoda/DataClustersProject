@@ -104,6 +104,19 @@ public class Cluster {
     }
 
     /**
+     * Calculate the squared distance between two points
+     *
+     * @param point Input point
+     * @return Squared distance between points
+     */
+    public double calculateDistance(double[] point, double[] point1) {
+        double distance = 0;
+        for (int i = 0; i < point.length; i++)
+            distance += calculateSingleError(point1[i], point[i]);
+        return distance;
+    }
+
+    /**
      * Calculates the Squared Error for this cluster
      *
      * @return Squared Error
@@ -113,6 +126,48 @@ public class Cluster {
         for (double[] point : children)
             error += errorFromCentroid(point);
         return error;
+    }
+
+    /**
+     * Calculates the Squared Error for this cluster
+     *
+     * @return Squared Error
+     */
+    public double calculateSquaredErrorExternal(List<Cluster> otherClusters) {
+        double error = 0;
+        for (Cluster cluster : otherClusters) {
+            if (cluster == this || cluster.children.isEmpty()) continue;
+
+            for (double[] point : children)
+                error += cluster.errorFromCentroid(point);
+        }
+        return error;
+    }
+
+    /**
+     * Calculate Silhouette Width of this cluster
+     *
+     * @param otherCluster Closest cluster
+     * @return The silhouette width of this cluster
+     */
+    public double calculateSilhouette(Cluster otherCluster) {
+        if (otherCluster.children.isEmpty()) return 0.0;
+
+        double silhouette = 0.0;
+
+        for (double[] point : children) {
+
+            // In distance
+            double inClusterDist =  errorFromCentroid(point);
+
+            // Out Distance
+            double outClusterDist = otherCluster.errorFromCentroid(point);
+
+            silhouette += ((outClusterDist - inClusterDist) / Math.max(outClusterDist, inClusterDist));
+        }
+
+        silhouette /= children.size();
+        return silhouette;
     }
 
 

@@ -79,6 +79,6 @@ public class RandomCentroidClusteredDatabase extends AbstractClusteredDatabase {
             closestCluster.addChild(rawData[i]);
         }
 
-        return calculateSumSquaredError();
+        return calculateSumSquaredErrorInternal();
     }
 }

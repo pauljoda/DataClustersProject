@@ -47,6 +47,6 @@ public class RandomPartitionClusteredDatabase extends AbstractClusteredDatabase 
         for(Cluster cluster : clusters)
             cluster.recalculateCentroid();
 
-        return calculateSumSquaredError();
+        return calculateSumSquaredErrorInternal();
     }
 }

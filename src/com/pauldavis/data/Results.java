@@ -17,6 +17,9 @@ public class Results {
     public static final String BEST_ENDING_SSE = "Best_Ending_SSE";
     public static final String BEST_RUN_RUN = "Best_Run_Run";
     public static final String BEST_RUN_COUNT = "Best_Run_Count";
+    public static final String BEST_K_SW = "Best_K_SW";
+    public static final String BEST_K_VALUE_SW = "Best_K_Value_SW";
+    public static final String BEST_K_VALUE_CH = "Best_K_Value_CH";
 
 
     /*******************************************************************************************************************
