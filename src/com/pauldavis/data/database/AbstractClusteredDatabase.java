@@ -1,6 +1,7 @@
 package com.pauldavis.data.database;
 
 import com.pauldavis.data.Cluster;
+import com.pauldavis.data.Point;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +60,7 @@ public abstract class AbstractClusteredDatabase {
      */
     public void rebuildClusters() {
         // List to hold all non centroids points, dumped from clusters
-        List<double[]> data = new ArrayList<>();
+        List<Point> data = new ArrayList<>();
 
         // Grab non centroids and clear
         for(Cluster cluster : clusters) {
@@ -68,7 +69,7 @@ public abstract class AbstractClusteredDatabase {
         }
 
         // Assign to closest cluster
-        for (double[] datum : data) {
+        for (Point datum : data) {
 
             // Tracking for closest cluster
             double closestClusterDist = Double.MAX_VALUE;

@@ -13,9 +13,11 @@ public class Cluster {
      *******************************************************************************************************************/
 
     // Center Point
-    private double[] centroid = null;
+    private Point centroid = null;
     // ALl points, centroid included
-    private List<double[]> children;
+    private List<Point> children;
+    // ID
+    public int ID;
 
 
     /*******************************************************************************************************************
@@ -34,10 +36,11 @@ public class Cluster {
      *
      * @param initialPoint First centroid
      */
-    public Cluster(double[] initialPoint) {
+    public Cluster(double[] initialPoint, int pointIndex, int number) {
         this();
-        centroid = initialPoint;
-        children.add(initialPoint);
+        ID = number;
+        centroid = new Point(initialPoint, pointIndex);
+        children.add(centroid);
     }
 
 
@@ -57,7 +60,7 @@ public class Cluster {
      *
      * @param child The child to add
      */
-    public void addChild(double[] child) {
+    public void addChild(Point child) {
         children.add(child);
     }
 
@@ -66,17 +69,17 @@ public class Cluster {
      */
     public void recalculateCentroid() {
         // Find middle of cluster
-        double[] meanValues = new double[centroid != null ? centroid.length : children.get(0).length];
-        for (double[] point : children)
-            for (int i = 0; i < point.length; i++)
-                meanValues[i] += point[i];
+        double[] meanValues = new double[centroid != null ? centroid.data.length : children.get(0).data.length];
+        for (Point point : children)
+            for (int i = 0; i < point.data.length; i++)
+                meanValues[i] += point.data[i];
         for (int i = 0; i < meanValues.length; i++) {
             double sum = meanValues[i];
             meanValues[i] = sum / children.size();
         }
 
         // We assign values to perfect center, then find closest points to this "false" centroid
-        centroid = meanValues;
+        centroid = new Point(meanValues, -1);
     }
 
     /**
@@ -96,10 +99,10 @@ public class Cluster {
      * @param point Input point
      * @return Squared distance between points
      */
-    public double errorFromCentroid(double[] point) {
+    public double errorFromCentroid(Point point) {
         double distance = 0;
-        for (int i = 0; i < point.length; i++)
-            distance += calculateSingleError(centroid[i], point[i]);
+        for (int i = 0; i < point.data.length; i++)
+            distance += calculateSingleError(centroid.data[i], point.data[i]);
         return distance;
     }
 
@@ -123,7 +126,7 @@ public class Cluster {
      */
     public double calculateSquaredError() {
         double error = 0;
-        for (double[] point : children)
+        for (Point point : children)
             error += errorFromCentroid(point);
         return error;
     }
@@ -138,7 +141,7 @@ public class Cluster {
         for (Cluster cluster : otherClusters) {
             if (cluster == this || cluster.children.isEmpty()) continue;
 
-            for (double[] point : children)
+            for (Point point : children)
                 error += cluster.errorFromCentroid(point);
         }
         return error;
@@ -155,7 +158,7 @@ public class Cluster {
 
         double silhouette = 0.0;
 
-        for (double[] point : children) {
+        for (Point point : children) {
 
             // In distance
             double inClusterDist =  errorFromCentroid(point);
@@ -175,19 +178,19 @@ public class Cluster {
      * Accessors/Mutators                                                                                              *
      *******************************************************************************************************************/
 
-    public double[] getCentroid() {
+    public Point getCentroid() {
         return centroid;
     }
 
-    public void setCentroid(double[] centroid) {
+    public void setCentroid(Point centroid) {
         this.centroid = centroid;
     }
 
-    public List<double[]> getChildren() {
+    public List<Point> getChildren() {
         return children;
     }
 
-    public void setChildren(List<double[]> children) {
+    public void setChildren(List<Point> children) {
         this.children = children;
     }
 }

@@ -1,6 +1,7 @@
 package com.pauldavis.data.database;
 
 import com.pauldavis.data.Cluster;
+import com.pauldavis.data.Point;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,8 +49,10 @@ public class RandomCentroidClusteredDatabase extends AbstractClusteredDatabase {
         }
 
         // Find random clusters
+        int label = 0;
         for(int point : randomIndices) {
-            clusters.add(new Cluster(rawData[point]));
+            clusters.add(new Cluster(rawData[point], point, label));
+            label++;
         }
 
         // Assign to clusters
@@ -65,7 +68,7 @@ public class RandomCentroidClusteredDatabase extends AbstractClusteredDatabase {
             // Loop Clusters
             for(Cluster cluster : clusters) {
                 // Test distance to this cluster
-                double tempDistance = cluster.errorFromCentroid(rawData[i]);
+                double tempDistance = cluster.errorFromCentroid(new Point(rawData[i], i));
 
                 // If better than anything seen, this is best option
                 if(tempDistance < closestClusterDist) {
@@ -76,7 +79,7 @@ public class RandomCentroidClusteredDatabase extends AbstractClusteredDatabase {
 
             // Assign point to what was found to be closest
             assert closestCluster != null;
-            closestCluster.addChild(rawData[i]);
+            closestCluster.addChild(new Point(rawData[i], i));
         }
 
         return calculateSumSquaredErrorInternal();
