@@ -4,6 +4,7 @@ import com.pauldavis.data.Cluster;
 import com.pauldavis.data.Point;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -157,6 +158,19 @@ public abstract class AbstractClusteredDatabase {
         }
 
         return closest;
+    }
+
+    /**
+     * Generates table
+     * @return Map where index of original value is key, assigned label as value
+     */
+    public double[] generateIndexClusterLabelTable(int size) {
+        double[] table = new double[size];
+        for(Cluster cluster : clusters) {
+            for(Point point : cluster.getChildren())
+                table[point.index] = cluster.ID;
+        }
+        return table;
     }
 
     /*******************************************************************************************************************

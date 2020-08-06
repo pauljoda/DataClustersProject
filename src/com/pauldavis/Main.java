@@ -1,12 +1,13 @@
 package com.pauldavis;
 
+import com.pauldavis.data.Point;
 import com.pauldavis.data.Results;
 import com.pauldavis.data.database.RandomCentroidClusteredDatabase;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
-import java.util.Scanner;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.System.exit;
 
@@ -50,12 +51,12 @@ public class Main {
         double[] labels = new double[numPoints];
         int i = 0;
         while (scan.hasNextLine()) {
-            String[] line = scan.nextLine().split(" ");
-            for (int j = 0; j < line.length; j++) {
+            List<String> line = Arrays.stream(scan.nextLine().split(" ")).filter(x -> !x.isEmpty()).collect(Collectors.toList());
+            for (int j = 0; j < line.size(); j++) {
                 if (j == dimensions)
-                    labels[i] = Double.parseDouble(line[j]);
+                    labels[i] = Double.parseDouble(line.get(j));
                 else
-                    data[i][j] = Double.parseDouble(line[j]);
+                    data[i][j] = Double.parseDouble(line.get(j));
             }
             i++;
         }
@@ -116,6 +117,8 @@ public class Main {
         Results.getResults().get(random_partitions).put(Results.BEST_ENDING_SSE, Double.MAX_VALUE);
         Results.getResults().get(random_partitions).put(Results.BEST_RUN_RUN, -1.0);
         Results.getResults().get(random_partitions).put(Results.BEST_RUN_COUNT, Double.MAX_VALUE);
+        Results.getResults().get(random_partitions).put(Results.BEST_JACCARD, 0.0);
+        Results.getResults().get(random_partitions).put(Results.BEST_RAND, 0.0);
 
         // Loop for number of runs
         for (int z = 0; z < numRuns; z++) {
@@ -159,6 +162,46 @@ public class Main {
                         Results.getResults().get(random_partitions).put(Results.BEST_RUN_RUN, (z + 1.0));
                     }
 
+                    // Calculate External Validation
+                    double truePositives = 0;
+                    double falseNegatives = 0;
+                    double falsePositives = 0;
+                    double trueNegatives = 0;
+                    double[] generatedLabels = randomCentroidClusteredDatabase.generateIndexClusterLabelTable(data.length);
+
+                    for(int pointI = 0; pointI < data.length; pointI++) {
+                        for(int pointJ = 0; pointJ < data.length; pointJ++) {
+                            if(pointI == pointJ) continue;
+
+                            // Test TP and FN
+                            if(labels[pointI] == labels[pointJ]) {
+                                // TP
+                                if(generatedLabels[pointI] == generatedLabels[pointJ])
+                                    truePositives++;
+                                else
+                                    falseNegatives++;
+                            }
+                            else {
+                                // FP
+                                if(generatedLabels[pointI] == generatedLabels[pointJ])
+                                    falsePositives++;
+                                else
+                                    trueNegatives++;
+                            }
+                        }
+                    }
+
+                    double Jaccard = ((truePositives) / (truePositives + falseNegatives + falsePositives));
+                    double rand = ((truePositives + trueNegatives) / (trueNegatives + truePositives + falseNegatives + falsePositives));
+
+                    if (Jaccard > Results.getResults().get(random_partitions).get(Results.BEST_JACCARD)) {
+                        Results.getResults().get(random_partitions).put(Results.BEST_JACCARD, Jaccard);
+                    }
+
+                    if (Jaccard > Results.getResults().get(random_partitions).get(Results.BEST_RAND)) {
+                        Results.getResults().get(random_partitions).put(Results.BEST_RAND, rand);
+                    }
+
                     System.out.println();
 
                     // Leave iteration
@@ -181,6 +224,8 @@ public class Main {
                 " on run: " + Results.getResults().get(random_partitions).get(Results.BEST_ENDING_SSE_RUN));
         System.out.println("Lowest iteration count: " + Results.getResults().get(random_partitions).get(Results.BEST_RUN_COUNT) +
                 " on run: " + Results.getResults().get(random_partitions).get(Results.BEST_RUN_RUN));
+        System.out.println("Best Jaccard: " + Results.getResults().get(random_partitions).get(Results.BEST_JACCARD));
+        System.out.println("Best Rand: " + Results.getResults().get(random_partitions).get(Results.BEST_RAND));
         System.out.println();
         System.out.println();
     }
